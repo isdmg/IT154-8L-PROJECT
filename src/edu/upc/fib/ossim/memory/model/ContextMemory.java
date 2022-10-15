@@ -35,6 +35,9 @@ public class ContextMemory {
 	private MemPartition selectedPartition;
 	private ProcessMemUnit selectedSwap;
 
+	int initProcessSize; // TODO Delete if not needed
+	int jobIndex = 1;
+
 
 	/**
 	 * Constructs a ContextMemory: sets main parameters (os, memory and page size), a concrete algorithm strategy and
@@ -939,16 +942,18 @@ public class ContextMemory {
      * @see MemStrategy#validateMemory(List, int)
      * @see MemStrategy#allocateProcess(List, List, ProcessMemUnit, int)
      */
+	// TODO: Add time parameters
     public boolean forwardTime(int time) throws SoSimException {
     	if (time == 0) {
     		backup(); // backup to restore initial state
     		algorithm.validateMemory(memory, memorySize);
+			initProcessSize = getProcessCount();
     		if (processQueue.isEmpty()) return true;
     	} else {
     		// Release terminated programs from memory 
     		if (memory.size() > 0) {
-    			releasePrograms(memory); 
-    			releaseVirtualPrograms(virtualmemory);
+				System.out.println("Time:"+time);
+    			releasePrograms(memory);
     		}
     		
 
@@ -980,44 +985,60 @@ public class ContextMemory {
     private void releasePrograms(List<MemPartition> memory) {
     	// Release terminated programs from memory, and decrements duration 
     	Iterator<MemPartition> it = memory.iterator();
-    	List<ProcessMemUnit> updated = new LinkedList<ProcessMemUnit>(); 
-    	
-    	while (it.hasNext()) {
-    		MemPartition b = it.next();
-    		ProcessMemUnit p = b.getAllocated();
-    		if (p != null && p.getParent().getDuration() >= 0) {  // Duration -1 infinite
-				if (!updated.contains(p.getParent())) {  // Only update program once
-					updated.add(p.getParent());
-					p.getParent().setDuration(p.getParent().getDuration() - 1);
-				}
+    	List<ProcessMemUnit> updated = new LinkedList<ProcessMemUnit>();
+		List<MemPartition> bupdated = new LinkedList<MemPartition>();
 
-    			if (p.getParent().getDuration() == 0) {
-    				releaseSwap(p.getParent()); 
-    				b.setAllocated(null);
-    			}
-    		}
-    	}
-    }
-    private void releaseVirtualPrograms(List<MemPartition> virtualmemory) {
-    	// Release terminated programs from memory, and decrements duration 
-    	Iterator<MemPartition> it = virtualmemory.iterator();
-    	List<ProcessMemUnit> updated = new LinkedList<ProcessMemUnit>(); 
-    	
     	while (it.hasNext()) {
     		MemPartition b = it.next();
     		ProcessMemUnit p = b.getAllocated();
     		if (p != null && p.getParent().getDuration() >= 0) {  // Duration -1 infinite
 				if (!updated.contains(p.getParent())) {  // Only update program once
 					updated.add(p.getParent());
-					//p.getParent().setDuration(p.getParent().getDuration() - 1);
+					bupdated.add(b);
+					// TODO: This shit.
+					// System.out.println("Memory:"+initProcessSize);
+					// p.getParent().setDuration(p.getParent().getDuration() - 1);
+					// System.out.println("List:"+updated.toString());
+					// System.out.println("ToLast:"+((LinkedList<ProcessMemUnit>)updated).getLast());
+					// System.out.println(((LinkedList<ProcessMemUnit>)updated).getLast());
+					// ((LinkedList<ProcessMemUnit>)updated).getLast().getParent().setDuration(((LinkedList<ProcessMemUnit>)updated).getLast().getParent().getDuration() - 1);
+//					updated.get(jobIndex - 1).getParent().setDuration(updated.get(jobIndex - 1).getParent().getDuration() - 1);
+//					System.out.println("PID Duration" +
+//							":"+((LinkedList<ProcessMemUnit>)updated).getLast().getParent().getDuration());
+
+//					if(updated.size() > 1 && jobIndex != updated.size()) {
+//						jobIndex++;
+//					} else if (jobIndex == updated.size()) {
+//						jobIndex = 1;
+//					}
+//					System.out.println("Job Index:"+(jobIndex - 1));
+//
 				}
-    			if (p.getParent().getDuration() == 0) {
-    				b.setAllocated(null);
-    			}
     		}
     	}
+		System.out.println("Size:"+updated.size());
+		int minIndex = 0;
+		int min = 1;
+		for(int i = 0; i < updated.size(); i++) {
+			if (updated.get(i).getPid() <= min) {
+				minIndex = i;
+		}
+		}
+		if (updated.size() != 0) {
+			updated.get(minIndex).getParent().setDuration(updated.get(minIndex).getParent().getDuration() - 1);
+		}
+		for(int i = 0; i < updated.size(); i++) {
+			if(updated.get(i).getParent().getDuration() == 0) {
+				releaseSwap(updated.get(i).getParent());
+				bupdated.get(i).setAllocated(null);
+			}
+			System.out.println("PID:"+updated.get(i).getPid());
+			System.out.println("Duration:"+updated.get(i).getParent().getDuration());
+		}
+
+
     }
-    
+
     private void releaseSwap(ProcessComplete p) {
     	// Release programs components from swap
     	List<ProcessMemUnit> remove = new LinkedList<ProcessMemUnit>();
