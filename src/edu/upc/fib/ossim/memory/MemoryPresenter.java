@@ -40,13 +40,8 @@ public class MemoryPresenter extends Presenter {
 
 	public static final String PROGS_PAINTER = "programs";
 	public static final String MEM_PAINTER = "memory";
-	// add a virtual memory painter
-	public static final String VMEM_PAINTER = "virtual memory";
-	public static final String SWAP_PAINTER = "swap";
 
 	private Vector<String[]> menuItemsMem;
-	// add menu items for virtual memory
-	private Vector<String[]> menuItemsVMem;
 	private Vector<String[]> menuItemsProg;
 	private Vector<String[]> menuItemsRun;
 	private Vector<String[]> menuItemsSwap;
@@ -76,7 +71,6 @@ public class MemoryPresenter extends Presenter {
 	 * information dialog are initialized
 	 * 
 	 * @see MemoryPainter
-	 * @see VirtualMemoryPainter
 	 * @see QueuePainter
 	 * @see SwapPainter
 	 * @see MemorySettings
@@ -87,14 +81,10 @@ public class MemoryPresenter extends Presenter {
 	public PanelTemplate createPanelComponents() {
 		timecontrols = new TimerPanel(this, TIMER_VELOCITY);
 		createMenuItems();
-		super.addPainter(new VirtualMemoryPainter(this, menuItemsVMem,
-				MEMORY_WIDTH, MEMORY_HEIGHT), VMEM_PAINTER);
 		super.addPainter(new MemoryPainter(this, menuItemsMem, MEMORY_WIDTH,
 				MEMORY_HEIGHT), MEM_PAINTER);
 		super.addPainter(new QueuePainter(this, "me_01", menuItemsProg,
 				PROGRAMS_WIDTH, PROGRAMS_HEIGHT), PROGS_PAINTER);
-		super.addPainter(new SwapPainter(this, "me_02", menuItemsSwap,
-				PROGRAMS_WIDTH, PROGRAMS_HEIGHT), SWAP_PAINTER);
 		settings = new MemorySettings(this, "mem_set");
 		info = new InfoDialog(this, "me_41", "mem_info", false, INFO_WIDTH,
 				INFO_HEIGTH, null, context.getTableHeaderInfo(),
@@ -103,7 +93,6 @@ public class MemoryPresenter extends Presenter {
 	}
 
 	public void createMenuItems() {
-		menuItemsVMem = new Vector<String[]>();
 
 		menuItemsMem = new Vector<String[]>();
 		String[] item1 = { "painter_upd", "me_08", "update.png" };
@@ -184,7 +173,7 @@ public class MemoryPresenter extends Presenter {
 	 */
 	public void createContext() {
 		context = new ContextMemory(MemorySettings.MIN_MEMSIZE,
-				MemorySettings.SO_VALUES[2], 1, new MemStrategyFIXED("FF"));
+				MemorySettings.SO_VALUES[2], 1, new MemStrategyVAR("FF"));
 		mgnActionCommand = "FIX";
 		pageSize = 1;
 	}
@@ -512,21 +501,6 @@ public class MemoryPresenter extends Presenter {
 				// Updates action command
 				mgnActionCommand = actionCommand;
 
-				if (action == 71) {
-
-					context.setAlgorithm(new MemStrategyFIXED(
-							((MemorySettings) settings).getPolicy()));
-
-					((MemorySettings) settings).paginationSetVisible(false);
-					((MemorySettings) settings).policyEnable(true);
-					super.getPainter(MEM_PAINTER).clearMenu();
-					super.getPainter(MEM_PAINTER).addMenuItem(
-							menuItemsMem.get(0));
-					super.getPainter(MEM_PAINTER).addMenuItem(
-							menuItemsMem.get(1));
-					super.getPainter(MEM_PAINTER).addMenuItem(
-							menuItemsMem.get(2));
-				}
 				if (action == 72) {
 
 					context.setAlgorithm(new MemStrategyVAR(
@@ -535,22 +509,7 @@ public class MemoryPresenter extends Presenter {
 					((MemorySettings) settings).policyEnable(true);
 					super.getPainter(MEM_PAINTER).clearMenu();
 				}
-				if (action == 73) {
 
-					context.setAlgorithm(new MemStrategyPAG(pageSize));
-					((MemorySettings) settings).paginationSetVisible(true);
-					((MemorySettings) settings).policyEnable(false);
-					super.getPainter(MEM_PAINTER).clearMenu();
-					super.getPainter(VMEM_PAINTER).clearMenu();
-
-				}
-				if (action == 74) {
-
-					context.setAlgorithm(new MemStrategySEG());
-					((MemorySettings) settings).paginationSetVisible(false);
-					((MemorySettings) settings).policyEnable(false);
-					super.getPainter(MEM_PAINTER).clearMenu();
-				}
 				settings.pack();
 				panel.setLabel(getAlgorithmInfo());
 				info.dispose();
@@ -571,20 +530,6 @@ public class MemoryPresenter extends Presenter {
 			context.setPolicy(((MemorySettings) settings).getPolicy());
 			panel.updateLabels();
 			break;
-		case 78: // Change page size
-			if (confirmChange(pageSize != ((MemorySettings) settings)
-					.getPageSize())) {
-				pageSize = ((MemorySettings) settings).getPageSize();
-				context.setAlgorithm(new MemStrategyPAG(pageSize));
-				context.setMemorySizeParams(
-						((MemorySettings) settings).getMemSize(),
-						((MemorySettings) settings).getSOSize());
-				panel.setLabel(getAlgorithmInfo());
-			} else {
-				((MemorySettings) settings).setPageSize(pageSize);
-			}
-			break;
-
 		case 79: // Change SO size
 			if (confirmChange(context.getSOSize() != ((MemorySettings) settings)
 					.getSOSize())) {
@@ -742,8 +687,6 @@ public class MemoryPresenter extends Presenter {
 			return context.setSelectedSwap(id.intValue());
 		if ("memory".equals(pt.getAlias()))
 			return context.setSelectedPartition(id.intValue(), started);
-		if ("virtualmemory".equals(pt.getAlias()))
-			return context.setSelectedPartition(id.intValue(), started);
 		return false;
 	}
 
@@ -787,8 +730,6 @@ public class MemoryPresenter extends Presenter {
 			return context.iteratorProcesses();
 		case 2:
 			return context.iteratorSwap();
-		case 3:
-			return context.iteratorVirtualPartitions();
 		default:
 			return null;
 		}
@@ -873,21 +814,11 @@ public class MemoryPresenter extends Presenter {
 		return context.getMemSize(start);
 	}
 
-	public int getVirtualMemSize(int start) {
-		return context.getVirtualMemSize(start);
-	}
-
 	/**
 	 * @see ContextMemory#getMemProcessSize(int)
 	 */
 	public int getMemProcessSize(int start) {
 		return context.getMemProcessSize(start);
-	}
-	/**
-	 * @see ContextMemory#getVirtualMemProcessSize(int)
-	 */
-	public int getVirtualMemProcessSize(int start) {
-		return context.getVirtualMemProcessSize(start);
 	}
 
 	/**
@@ -896,12 +827,7 @@ public class MemoryPresenter extends Presenter {
 	public Color getMemProcessColor(int start) {
 		return context.getMemProcessColor(start);
 	}
-	/**
-	 * @see ContextMemory#getVirtualMemProcessColor(int)
-	 */
-	public Color getVirtualMemProcessColor(int start) {
-		return context.getVirtualMemProcessColor(start);
-	}
+
 
 	/**
 	 * @see ContextMemory#hasExternalFragmentation()
@@ -915,10 +841,6 @@ public class MemoryPresenter extends Presenter {
 	 */
 	public Vector<String> getMemProgramInfo(int start) {
 		return context.getMemProcessInfo(start);
-	}
-
-	public Vector<String> getVirtualMemProgramInfo(int start) {
-		return context.getVirtualMemProcessInfo(start);
 	}
 
 	public int getOSSize() {
@@ -946,12 +868,6 @@ public class MemoryPresenter extends Presenter {
 	 */
 	public int getMemorySize() {
 		return context.getMemorySize();
-	}
-	/**
-	 * @see ContextMemory#getVirtualMemorySize()
-	 */
-	public int getVirtualMemorySize() {
-		return context.getVirtualMemorySize();
 	}
 
 	/**
