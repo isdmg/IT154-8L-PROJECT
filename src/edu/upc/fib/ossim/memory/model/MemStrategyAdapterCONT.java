@@ -303,7 +303,10 @@ public abstract class MemStrategyAdapterCONT implements MemStrategy {
 		if (candidate != null) {
 			allocateCandidate(memory, candidate, allocate);
 		}
-		else throw new SoSimException("me_08");
+		else {
+			MemStrategyVAR.noAllocation = true;
+			throw new SoSimException("me_08");
+		}
 	}
 
 	/**

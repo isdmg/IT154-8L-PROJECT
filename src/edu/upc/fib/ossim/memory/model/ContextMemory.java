@@ -2,6 +2,8 @@ package edu.upc.fib.ossim.memory.model;
 
 import edu.upc.fib.ossim.utils.SoSimException;
 import edu.upc.fib.ossim.utils.Translation;
+import edu.upc.fib.ossim.memory.model.MemStrategyVAR; // For tracking boolean
+import edu.upc.fib.ossim.memory.model.MemStrategyAdapterCONT; // For tracking boolean
 
 import java.awt.*;
 import java.util.Iterator;
@@ -958,8 +960,9 @@ public class ContextMemory {
     	} else {
     		// Release terminated programs from memory 
     		if (memory.size() > 0) {
-				System.out.println("=Time|:"+time);
-    			releasePrograms(memory);
+				System.out.println("=========Time|:"+time);
+				checkNoAllocation(memory);
+    			// releasePrograms(memory);
     		}
     		
 
@@ -988,54 +991,129 @@ public class ContextMemory {
     	return false;
    	}
 
-    private void releasePrograms(List<MemPartition> memory) {
-    	// Release terminated programs from memory, and decrements duration 
-    	Iterator<MemPartition> it = memory.iterator();
-    	List<ProcessMemUnit> updated = new LinkedList<ProcessMemUnit>();
+	   // private void checkNoAllocation(List<ProcessMemUnit> updated, List<MemPartition> bupdated) {
+	private void checkNoAllocation(List<MemPartition> memory) {
+		// Release terminated programs from memory, and decrements duration
+		Iterator<MemPartition> it = memory.iterator();
+		List<ProcessMemUnit> updated = new LinkedList<ProcessMemUnit>();
 		List<MemPartition> bupdated = new LinkedList<MemPartition>();
 
-    	while (it.hasNext()) {
-    		MemPartition b = it.next();
-    		ProcessMemUnit p = b.getAllocated();
-    		if (p != null && p.getParent().getDuration() >= 0) {  // Duration -1 infinite
+		while (it.hasNext()) {
+			MemPartition b = it.next();
+			ProcessMemUnit p = b.getAllocated();
+			if (p != null && p.getParent().getDuration() >= 0) {  // Duration -1 infinite
 				if (!updated.contains(p.getParent())) {  // Only update program once
 					updated.add(p.getParent());
-					// System.out.println(updated.toString());
 					bupdated.add(b);
-					// TODO: This shit.
-					// System.out.println("Memory:"+initProcessSize);
-					// p.getParent().setDuration(p.getParent().getDuration() - 1);
-					// System.out.println("List:"+updated.toString());
-					// System.out.println("ToLast:"+((LinkedList<ProcessMemUnit>)updated).getLast());
-					// System.out.println(((LinkedList<ProcessMemUnit>)updated).getLast());
-					// ((LinkedList<ProcessMemUnit>)updated).getLast().getParent().setDuration(((LinkedList<ProcessMemUnit>)updated).getLast().getParent().getDuration() - 1);
-//					updated.get(jobIndex - 1).getParent().setDuration(updated.get(jobIndex - 1).getParent().getDuration() - 1);
-//					System.out.println("PID Duration" +
-//							":"+((LinkedList<ProcessMemUnit>)updated).getLast().getParent().getDuration());
-
-//					if(updated.size() > 1 && jobIndex != updated.size()) {
-//						jobIndex++;
-//					} else if (jobIndex == updated.size()) {
-//						jobIndex = 1;
-//					}
-//					System.out.println("Job Index:"+(jobIndex - 1));
-//
-				}
-    		}
-    	}
-		// System.out.println("--Size|:"+updated.size());
-		if (updated.size() != 0) {
-			if (jobPidIndex > initProcessSize) {
-				jobPidIndex = 1;
-			}
-			for (int i = 0; i < updated.size(); i++) {
-				if (updated.get(i).getParent().getPid()==jobPidIndex) {
-					// System.out.println("Currently processing:"+updated.get(i).getPid());
-					updated.get(i).getParent().setDuration(updated.get(i).getParent().getDuration() - 1);
 				}
 			}
-			jobPidIndex++;
 		}
+
+		subtractNoAllocation(memory, updated, bupdated);
+	}
+
+	private void subtractNoAllocation(List<MemPartition> memory, List<ProcessMemUnit> updated, List<MemPartition> bupdated) {
+		System.out.println("In NoAlloc");
+		System.out.println(MemStrategyVAR.noAllocation);
+		if (MemStrategyVAR.noAllocation) {
+			System.out.println("We in--NoAlloc");
+			if (updated.size() != 0) {
+				// if out of bounds, return to first process
+				if (jobPidIndex > initProcessSize) {
+					jobPidIndex = 1;
+				}
+
+				// no repeats
+				if (jobPidIndex == MemStrategyVAR.getTProcessAllocationPid()) {
+					jobPidIndex++;
+					MemStrategyVAR.setTProcessAllocationPid(0);
+				}
+
+				for (int i = 0; i < updated.size(); i++) {
+					if (updated.get(i).getParent().getPid()==jobPidIndex) {
+						System.out.println("JobPidIndex:"+jobPidIndex);
+						System.out.println("Currently processing:"+updated.get(i).getPid());
+						updated.get(i).getParent().setDuration(updated.get(i).getParent().getDuration() - 1);
+					}
+				}
+				jobPidIndex++;
+				System.out.println("Next JobPidIndex:"+jobPidIndex);
+			}
+			MemStrategyVAR.noAllocation = false;
+		}
+		System.out.println("Checking update noallo:"+MemStrategyVAR.noAllocation);
+		releasePrograms(memory, updated, bupdated);
+	}
+
+	private void releasePrograms(List<MemPartition> memory, List<ProcessMemUnit> updated, List<MemPartition> bupdated) {
+    	// Release terminated programs from memory, and decrements duration 
+//    	Iterator<MemPartition> it = memory.iterator();
+////    	List<ProcessMemUnit> updated = new LinkedList<ProcessMemUnit>();
+//		List<MemPartition> bupdated = new LinkedList<MemPartition>();
+
+//    	while (it.hasNext()) {
+//    		MemPartition b = it.next();
+//    		ProcessMemUnit p = b.getAllocated();
+//    		if (p != null && p.getParent().getDuration() >= 0) {  // Duration -1 infinite
+//				if (!updated.contains(p.getParent())) {  // Only update program once
+//					updated.add(p.getParent());
+//					// System.out.println(updated.toString());
+//					bupdated.add(b);
+//					// TODO: This shit.
+//					// System.out.println("Memory:"+initProcessSize);
+//					// p.getParent().setDuration(p.getParent().getDuration() - 1);
+//					// System.out.println("List:"+updated.toString());
+//					// System.out.println("ToLast:"+((LinkedList<ProcessMemUnit>)updated).getLast());
+//					// System.out.println(((LinkedList<ProcessMemUnit>)updated).getLast());
+//					// ((LinkedList<ProcessMemUnit>)updated).getLast().getParent().setDuration(((LinkedList<ProcessMemUnit>)updated).getLast().getParent().getDuration() - 1);
+////					updated.get(jobIndex - 1).getParent().setDuration(updated.get(jobIndex - 1).getParent().getDuration() - 1);
+////					System.out.println("PID Duration" +
+////							":"+((LinkedList<ProcessMemUnit>)updated).getLast().getParent().getDuration());
+//
+////					if(updated.size() > 1 && jobIndex != updated.size()) {
+////						jobIndex++;
+////					} else if (jobIndex == updated.size()) {
+////						jobIndex = 1;
+////					}
+////					System.out.println("Job Index:"+(jobIndex - 1));
+////
+//				}
+//    		}
+//    	}
+
+//		// System.out.println("--Size|:"+updated.size());
+//		// For subtracting time
+//		System.out.println(MemStrategyVAR.getTProcessAllocation());
+//		if (!MemStrategyVAR.getTProcessAllocation()){
+//			System.out.println("We in");
+//			if (updated.size() != 0) {
+//				// if out of bounds, return to first process
+//				if (jobPidIndex > initProcessSize) {
+//					jobPidIndex = 1;
+//				}
+//
+//				// no repeats
+//				if (jobPidIndex == MemStrategyVAR.getTProcessAllocationPid()) {
+//					jobPidIndex++;
+//				}
+//
+//				for (int i = 0; i < updated.size(); i++) {
+//					if (updated.get(i).getParent().getPid()==jobPidIndex) {
+//						// System.out.println("Currently processing:"+updated.get(i).getPid());
+//						updated.get(i).getParent().setDuration(updated.get(i).getParent().getDuration() - 1);
+//					}
+//				}
+//				jobPidIndex++;
+//			}
+//		} else {
+//			System.out.println("We out");
+//			MemStrategyVAR.setTProcessAllocation(false);
+//		}
+
+		subtractDuration(updated, bupdated);
+
+		// Deallocate process
+		// TODO: Hypothesis: make it a method
 		for(int i = 0; i < updated.size(); i++) {
 			if(updated.get(i).getParent().getDuration() == 0) {
 				releaseSwap(updated.get(i).getParent());
@@ -1044,9 +1122,42 @@ public class ContextMemory {
 			System.out.println("--PID|:"+updated.get(i).getPid());
 			System.out.println("--Duration|:"+updated.get(i).getParent().getDuration()+"\n");
 		}
-
-
     }
+
+	private void subtractDuration(List<ProcessMemUnit> updated, List<MemPartition> bupdated) {
+		System.out.println("In Dura");
+		System.out.println(MemStrategyVAR.getTProcessAllocation());
+		if (!MemStrategyVAR.getTProcessAllocation()) {
+			System.out.println("We in--Dura");
+			System.out.println(updated.toString());
+			if (updated.size() != 0) {
+				// if out of bounds, return to first process
+				if (jobPidIndex > initProcessSize) {
+					jobPidIndex = 1;
+				}
+
+				// no repeats
+				if (jobPidIndex == MemStrategyVAR.getTProcessAllocationPid()) {
+					jobPidIndex++;
+					MemStrategyVAR.setTProcessAllocationPid(0);
+				}
+
+				for (int i = 0; i < updated.size(); i++) {
+					if (updated.get(i).getParent().getPid()==jobPidIndex) {
+						System.out.println("JobPidIndex:"+jobPidIndex);
+						System.out.println("Currently processing:"+updated.get(i).getPid());
+						updated.get(i).getParent().setDuration(updated.get(i).getParent().getDuration() - 1);
+					}
+				}
+				jobPidIndex++;
+				System.out.println("Next JobPidIndex:"+jobPidIndex);
+				MemStrategyVAR.setTProcessAllocation(false);
+			}
+		} else {
+			System.out.println("We out");
+			MemStrategyVAR.setTProcessAllocation(false);
+		}
+	}
 
     private void releaseSwap(ProcessComplete p) {
     	// Release programs components from swap

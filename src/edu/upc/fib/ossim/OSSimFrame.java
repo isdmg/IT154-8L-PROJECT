@@ -15,7 +15,7 @@ public class OSSimFrame extends JFrame implements OSSim {
 		this.setTitle("OS Project");
 		this.setSize(800,600);
 		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		this.setResizable(false);
+		this.setResizable(true);
 		AppSession.getInstance().setApp(this);
 		this.setVisible(true); // Propietat de visibilitat 
 	}

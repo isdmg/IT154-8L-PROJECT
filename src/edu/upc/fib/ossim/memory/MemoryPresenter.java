@@ -25,6 +25,7 @@ import java.util.Vector;
  * 
  * @see Presenter
  */
+// TODO: Change Prog Height
 public class MemoryPresenter extends Presenter {
 
 	private static final int TABLE_WIDTH = 200;
@@ -32,7 +33,7 @@ public class MemoryPresenter extends Presenter {
 	private static final int INFO_WIDTH = 500;
 	private static final int INFO_HEIGTH = 200;
 	public static final int MEMORY_WIDTH = 180;
-	public static final int MEMORY_HEIGHT = 380;
+	public static final int MEMORY_HEIGHT = 700; //380 default height
 	public static final int PROGRAMS_WIDTH = 300;
 	public static final int PROGRAMS_HEIGHT = 200;
 	public static final int LEGEND_WIDTH = 240;

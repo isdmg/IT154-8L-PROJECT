@@ -13,6 +13,10 @@ public class MemStrategyVAR extends MemStrategyAdapterCONT {
 		super(policy);
 	}
 
+	private static boolean tProcessAllocation = false;
+	private static int tProcessAllocationPid = 0;
+	public static boolean noAllocation = false;
+
 	/**
 	 * Gets Variable-size partitions algorithm information including allocation policy   
 	 * 
@@ -90,14 +94,18 @@ public class MemStrategyVAR extends MemStrategyAdapterCONT {
 		candidate.setSize(allocate.getSize());   			
 		candidate.setAllocated(allocate);
 		memory.add(candidate);
+		tProcessAllocation = false;
 		if (size > candidate.getSize()) {
 			// Create empty partition
 			MemPartition b = new MemPartition(candidate.getStart()+candidate.getSize(), size - candidate.getSize());
 			memory.add(b);
 			if (candidate.getAllocated() != null) {
+				System.out.println("Candidate:"+candidate.toString());
+				System.out.println("B:"+b.toString());
 				candidate.getAllocated().getParent().setDuration(candidate.getAllocated().getParent().getDuration() - 1);
-				candidate.getAllocated().getParent().setDuration(candidate.getAllocated().getParent().getDuration() - 1);
-				System.out.println("--Process Allocated!!!");
+				System.out.println("-- "+candidate.getAllocated().getParent().getPid()+" PID Allocated!!!");
+				tProcessAllocationPid = candidate.getAllocated().getParent().getPid();
+				tProcessAllocation = true;
 			}
 		}
 	}
@@ -109,5 +117,21 @@ public class MemStrategyVAR extends MemStrategyAdapterCONT {
 	 */
 	public  Vector<Vector<Vector<String>>> getXMLDataMemory(List<MemPartition> memory) {
 		return null;
+	}
+
+	public static boolean getTProcessAllocation() {
+		return tProcessAllocation;
+	}
+
+	public static void setTProcessAllocation(boolean TProcessAllocation) {
+		MemStrategyVAR.tProcessAllocation = TProcessAllocation;
+	}
+
+	public static int getTProcessAllocationPid() {
+		return tProcessAllocationPid;
+	}
+
+	public static void setTProcessAllocationPid(int tProcessAllocationPid) {
+		MemStrategyVAR.tProcessAllocationPid = tProcessAllocationPid;
 	}
 }
