@@ -36,7 +36,7 @@ public class ContextMemory {
 	private ProcessMemUnit selectedSwap;
 
 	int initProcessSize; // TODO Delete if not needed
-	int jobIndex = 1;
+	int jobPidIndex = 1; // TODO Delete if not needed
 
 
 	/**
@@ -952,7 +952,7 @@ public class ContextMemory {
     	} else {
     		// Release terminated programs from memory 
     		if (memory.size() > 0) {
-				System.out.println("Time:"+time);
+				System.out.println("=Time|:"+time);
     			releasePrograms(memory);
     		}
     		
@@ -994,6 +994,7 @@ public class ContextMemory {
     		if (p != null && p.getParent().getDuration() >= 0) {  // Duration -1 infinite
 				if (!updated.contains(p.getParent())) {  // Only update program once
 					updated.add(p.getParent());
+					System.out.println(updated.toString());
 					bupdated.add(b);
 					// TODO: This shit.
 					// System.out.println("Memory:"+initProcessSize);
@@ -1016,24 +1017,26 @@ public class ContextMemory {
 				}
     		}
     	}
-		System.out.println("Size:"+updated.size());
-		int minIndex = 0;
-		int min = 1;
-		for(int i = 0; i < updated.size(); i++) {
-			if (updated.get(i).getPid() <= min) {
-				minIndex = i;
-		}
-		}
+		// System.out.println("--Size|:"+updated.size());
 		if (updated.size() != 0) {
-			updated.get(minIndex).getParent().setDuration(updated.get(minIndex).getParent().getDuration() - 1);
+			if (jobPidIndex > initProcessSize) {
+				jobPidIndex = 1;
+			}
+			for (int i = 0; i < updated.size(); i++) {
+				if (updated.get(i).getParent().getPid()==jobPidIndex) {
+					System.out.println("Currently processing:"+updated.get(i).getPid());
+					updated.get(i).getParent().setDuration(updated.get(i).getParent().getDuration() - 1);
+				}
+			}
+			jobPidIndex++;
 		}
 		for(int i = 0; i < updated.size(); i++) {
 			if(updated.get(i).getParent().getDuration() == 0) {
 				releaseSwap(updated.get(i).getParent());
 				bupdated.get(i).setAllocated(null);
 			}
-			System.out.println("PID:"+updated.get(i).getPid());
-			System.out.println("Duration:"+updated.get(i).getParent().getDuration());
+			// System.out.println("--PID|:"+updated.get(i).getPid());
+			// System.out.println("--Duration|:"+updated.get(i).getParent().getDuration()+"\n");
 		}
 
 
