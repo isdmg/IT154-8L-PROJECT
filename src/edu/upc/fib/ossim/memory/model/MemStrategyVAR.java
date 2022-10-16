@@ -83,6 +83,7 @@ public class MemStrategyVAR extends MemStrategyAdapterCONT {
 	 * @param candidate		candidate partition
 	 * @param allocate		process to allocate
 	 */
+	// NOTE: Eto yung para malaman ano yung inallocate
 	public void allocateCandidate(List<MemPartition> memory, MemPartition candidate, ProcessMemUnit allocate) {
 		memory.remove(candidate);
 		int size = candidate.getSize();
@@ -93,6 +94,11 @@ public class MemStrategyVAR extends MemStrategyAdapterCONT {
 			// Create empty partition
 			MemPartition b = new MemPartition(candidate.getStart()+candidate.getSize(), size - candidate.getSize());
 			memory.add(b);
+			if (candidate.getAllocated() != null) {
+				candidate.getAllocated().getParent().setDuration(candidate.getAllocated().getParent().getDuration() - 1);
+				candidate.getAllocated().getParent().setDuration(candidate.getAllocated().getParent().getDuration() - 1);
+				System.out.println("--Process Allocated!!!");
+			}
 		}
 	}
 	

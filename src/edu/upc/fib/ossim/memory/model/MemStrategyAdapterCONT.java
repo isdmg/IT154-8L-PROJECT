@@ -258,6 +258,7 @@ public abstract class MemStrategyAdapterCONT implements MemStrategy {
 	 * 
 	 * @throws SoSimException	process can not be allocated
 	 */
+	// TODO: Do something about this.
 	public void allocateProcess(List<MemPartition> memory, List<ProcessMemUnit> swap, ProcessMemUnit allocate, int memory_size) throws SoSimException {
 		Object[] memOrdered = memory.toArray();
     	Arrays.sort(memOrdered);
@@ -271,7 +272,8 @@ public abstract class MemStrategyAdapterCONT implements MemStrategy {
 	    		if (partition.getAllocated() == null && partition.getSize() >= allocate.getSize()) {
 	    			// Allocates only necessary
 	    			candidate = partition;// First candidate
-	    		}
+					System.out.println("--Allocation process");
+				}
 	    		i++;
 			}
 		}
@@ -298,7 +300,9 @@ public abstract class MemStrategyAdapterCONT implements MemStrategy {
 			}
 		}
 
-		if (candidate != null) allocateCandidate(memory, candidate, allocate);
+		if (candidate != null) {
+			allocateCandidate(memory, candidate, allocate);
+		}
 		else throw new SoSimException("me_08");
 	}
 

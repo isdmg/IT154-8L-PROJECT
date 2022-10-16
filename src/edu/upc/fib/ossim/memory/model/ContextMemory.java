@@ -153,6 +153,7 @@ public class ContextMemory {
 		data.add(algorithm.getProcessComponentsData(selectedProcess));
 		data.add(selectedProcess.getParent().getQuantumOrders());	
 		data.add(selectedProcess.getParent().getQuantum());
+		System.out.println("getSelectedProcessData");
 		return data;
 	}
 
@@ -206,13 +207,14 @@ public class ContextMemory {
 	 * @return partition exists and can be selected
 	 */
 	public boolean setSelectedPartition(int start, boolean started) {
+		System.out.println("setSelectedPartition");
 		selectedPartition = getByStart(start);
 		if (selectedPartition == null) return false; 
 		if (selectedPartition.getAllocated() != null && selectedPartition.getAllocated().getParent().getPid() == 0) return false;
 		if (started) {
 			if (selectedPartition.getAllocated() == null) return false;
 			else return true;
-		} else return algorithm.isSelectable(); // only true for FIX 
+		} else return algorithm.isSelectable(); // only true for FIX
 	}
 
 	/**
@@ -234,6 +236,7 @@ public class ContextMemory {
     	data.add(getMemorySize()-1); 
 		data.add(selectedPartition.getStart());
 		data.add(selectedPartition.getSize());
+		System.out.println("getSelectedPartitionData");
 		return data;
     }
 
@@ -585,6 +588,7 @@ public class ContextMemory {
 	 * @return	process information for address translation form
 	 */
 	public String getAddTransProgInfo() {
+		System.out.println("getAddTransProgInfo");
 		ProcessComplete p = selectedPartition.getAllocated().getParent();
 		return "PID " + p.getPid() + " (" + p.getParent().getName() + ") " + Translation.getInstance().getLabel("me_77") + ":" + p.getParent().getSize() + " u.";
 	}
@@ -782,6 +786,7 @@ public class ContextMemory {
     	ProcessComplete p = new ProcessComplete(new Integer((String) data.get(0)), (String) data.get(1), (Integer) data.get(2), (Integer) data.get(3), (Color) data.get(4));
     	processQueue.add(i, p);
     	algorithm.addProcessComponents(p, components);
+		System.out.println("updProgram");
     }
     /**
 	 * Update a process from processes queue, in pagination
@@ -857,7 +862,8 @@ public class ContextMemory {
     	memory.add(b);	
     	virtualmemory.add(b);
 		selectedPartition = b;
-    }
+		System.out.println("addMemPartition");
+	}
 
     /**
      * Removes selected partition from memory
@@ -994,7 +1000,7 @@ public class ContextMemory {
     		if (p != null && p.getParent().getDuration() >= 0) {  // Duration -1 infinite
 				if (!updated.contains(p.getParent())) {  // Only update program once
 					updated.add(p.getParent());
-					System.out.println(updated.toString());
+					// System.out.println(updated.toString());
 					bupdated.add(b);
 					// TODO: This shit.
 					// System.out.println("Memory:"+initProcessSize);
@@ -1024,7 +1030,7 @@ public class ContextMemory {
 			}
 			for (int i = 0; i < updated.size(); i++) {
 				if (updated.get(i).getParent().getPid()==jobPidIndex) {
-					System.out.println("Currently processing:"+updated.get(i).getPid());
+					// System.out.println("Currently processing:"+updated.get(i).getPid());
 					updated.get(i).getParent().setDuration(updated.get(i).getParent().getDuration() - 1);
 				}
 			}
@@ -1035,8 +1041,8 @@ public class ContextMemory {
 				releaseSwap(updated.get(i).getParent());
 				bupdated.get(i).setAllocated(null);
 			}
-			// System.out.println("--PID|:"+updated.get(i).getPid());
-			// System.out.println("--Duration|:"+updated.get(i).getParent().getDuration()+"\n");
+			System.out.println("--PID|:"+updated.get(i).getPid());
+			System.out.println("--Duration|:"+updated.get(i).getParent().getDuration()+"\n");
 		}
 
 
