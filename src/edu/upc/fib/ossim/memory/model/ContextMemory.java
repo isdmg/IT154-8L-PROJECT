@@ -1024,17 +1024,16 @@ public class ContextMemory {
     		}
     	}
 		// System.out.println("--Size|:"+updated.size());
-		if (updated.size() != 0) {
-			if (jobPidIndex > initProcessSize) {
-				jobPidIndex = 1;
+		if (!MemStrategyVAR.getTProcessAllocation()) {
+			System.out.println("We in--Dura");
+			System.out.println(updated.toString());
+			if (updated.size() != 0) {
+				updated.get(i).getParent().setDuration(updated.get(i).getParent().getDuration() - 1);
+				MemStrategyVAR.setTProcessAllocation(false);
 			}
-			for (int i = 0; i < updated.size(); i++) {
-				if (updated.get(i).getParent().getPid()==jobPidIndex) {
-					// System.out.println("Currently processing:"+updated.get(i).getPid());
-					updated.get(i).getParent().setDuration(updated.get(i).getParent().getDuration() - 1);
-				}
-			}
-			jobPidIndex++;
+		} else {
+			System.out.println("We out");
+			MemStrategyVAR.setTProcessAllocation(false);
 		}
 		for(int i = 0; i < updated.size(); i++) {
 			if(updated.get(i).getParent().getDuration() == 0) {
