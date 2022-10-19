@@ -13,12 +13,12 @@ public class MemoryManagement {
         if (memMan == null) {
             memMan = new MemoryManagement();
         }
-
         return memMan;
     }
 
     // contains allocated status
     public static boolean allocated = false;
+    public static boolean coalesced = false;
     // contains gantt chart
     public static LinkedList<Integer> jList = new LinkedList<>();
     // contains gantt chart (next job)
@@ -34,6 +34,7 @@ public class MemoryManagement {
 
     public static void reset() {
         allocated = false;
+        coalesced = false;
         jList = new LinkedList<>();
         jIList = new LinkedList<>();
         jobIndex = 1;

@@ -202,6 +202,8 @@ public class ContextMemory {
      */
     public boolean setSelectedPartition(int start, boolean started) {
         System.out.println("setSelectedPartition");
+        // TODO: Remove when not needed
+        coalesce();
         selectedPartition = getByStart(start);
         if (selectedPartition == null) return false;
         if (selectedPartition.getAllocated() != null && selectedPartition.getAllocated().getParent().getPid() == 0)
@@ -707,8 +709,8 @@ public class ContextMemory {
     /**
      * Returns allocation tables data, pages table (pagination) or segments table (segmentation)
      *
-     * @throws SoSimException no process is allocated into selected partition
      * @return allocation tables data
+     * @throws SoSimException no process is allocated into selected partition
      * @see MemStrategy#getMemProcessTableData(List, ProcessComplete, int)
      */
     public Vector<Vector<Object>> getMemProcessTableData() throws SoSimException {
@@ -871,6 +873,10 @@ public class ContextMemory {
         algorithm.compaction(memory, memorySize);
     }
 
+    public void coalesce() {
+        algorithm.coalesce(memory, memorySize);
+    }
+
     /**
      * Removes a selected process from backing store. In non contiguous
      * memory management strategies, process components are also removed from memory
@@ -929,6 +935,7 @@ public class ContextMemory {
      */
     // TODO: Add time parameters
     public boolean forwardTime(int time) throws SoSimException {
+        int coalesceInterval = 1;
         if (time == 0) {
             backup(); // backup to restore initial state
             algorithm.validateMemory(memory, memorySize);
@@ -936,6 +943,8 @@ public class ContextMemory {
             MemoryManagement.getInstance().initialize(initProcessSize);
             System.out.println("============TIME:" + time);
             if (processQueue.isEmpty()) return true;
+        } else if (time % coalesceInterval == 0) {
+            coalesce();
         } else {
             // Release terminated programs from memory
             if (memory.size() > 0) {
