@@ -943,9 +943,11 @@ public class ContextMemory {
             MemoryManagement.getInstance().initialize(initProcessSize);
             System.out.println("============TIME:" + time);
             if (processQueue.isEmpty()) return true;
-        } else if (time % coalesceInterval == 0) {
-            coalesce();
         } else {
+            if (time % coalesceInterval == 0) {
+                coalesce();
+            }
+
             // Release terminated programs from memory
             if (memory.size() > 0) {
                 System.out.println("============TIME:" + time);
@@ -994,16 +996,20 @@ public class ContextMemory {
             }
         }
 
+
         if (!MemoryManagement.allocated) {
-            int index = MemoryManagement.getInstance().getJobSubtract(updated);
-            if (index != -1) {
-                ProcessMemUnit j = updated.get(index);
-                ProcessComplete p = j.getParent();
-                p.setDuration(p.getDuration() - 1);
-                MemoryManagement.jList.add(j.getPid()); // add to gantt
+            if (!MemoryManagement.coalesced) {
+                int index = MemoryManagement.getInstance().getJobSubtract(updated);
+                if (index != -1) {
+                    ProcessMemUnit j = updated.get(index);
+                    ProcessComplete p = j.getParent();
+                    p.setDuration(p.getDuration() - 1);
+                    MemoryManagement.jList.add(j.getPid()); // add to gantt
+                }
             }
         }
         MemoryManagement.allocated = false;
+        MemoryManagement.coalesced = false;
 
 
         for (int i = 0; i < updated.size(); i++) {

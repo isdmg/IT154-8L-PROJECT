@@ -100,7 +100,7 @@ public class MemStrategyVAR extends MemStrategyAdapterCONT {
 
 
         int end = -1;
-        for (int j = 0; j < holes.size() - 2; j++) {
+        for (int j = 0; j <= holes.size() - 2; j++) {
             System.out.print(holes.get(j).getStart() + " " + (holes.get(j).getStart() + holes.get(j).getSize()) + "\n");
             MemPartition currentHole = holes.get(j);
             MemPartition nextHole = holes.get(j+1);
@@ -109,6 +109,7 @@ public class MemStrategyVAR extends MemStrategyAdapterCONT {
                 adjHoles.add(nextHole);
             }
         }
+        // TODO: Will this work for multiple adjacent holes?
 
 //        for (MemPartition hole : holes) {
 //            if (end == hole.getStart()) {
@@ -135,6 +136,8 @@ public class MemStrategyVAR extends MemStrategyAdapterCONT {
             System.out.println("End:" + (b.getStart() + b.getSize() - 1));
             memory.add(b);
             MemoryManagement.coalesced = true;
+            MemoryManagement.jList.add(-20);
+            MemoryManagement.jIList.add(-20);
         }
     }
 

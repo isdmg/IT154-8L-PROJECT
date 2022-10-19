@@ -65,7 +65,6 @@ public class MemoryManagement {
         // if job index is out of bounds (right)
         if (max < jobIndex) {
             jobIndex = 0;
-            // TODO: Wrong logic for getting min
             min = max;
             for(int i = 0; i < js.size(); i++) {
                 int x = js.get(i).getPid();
