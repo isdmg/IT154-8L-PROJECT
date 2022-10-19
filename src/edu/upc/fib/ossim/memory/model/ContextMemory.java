@@ -202,8 +202,6 @@ public class ContextMemory {
      */
     public boolean setSelectedPartition(int start, boolean started) {
         System.out.println("setSelectedPartition");
-        // TODO: Remove when not needed
-        coalesce();
         selectedPartition = getByStart(start);
         if (selectedPartition == null) return false;
         if (selectedPartition.getAllocated() != null && selectedPartition.getAllocated().getParent().getPid() == 0)
@@ -870,7 +868,8 @@ public class ContextMemory {
      * @see MemStrategy#compaction(List, int)
      */
     public void compaction() {
-        algorithm.compaction(memory, memorySize);
+        //algorithm.compaction(memory, memorySize);
+        algorithm.coalesce(memory, memorySize);
     }
 
     public void coalesce() {
@@ -935,7 +934,7 @@ public class ContextMemory {
      */
     // TODO: Add time parameters
     public boolean forwardTime(int time) throws SoSimException {
-        int coalesceInterval = 1;
+        int coalesceInterval = 10;
         if (time == 0) {
             backup(); // backup to restore initial state
             algorithm.validateMemory(memory, memorySize);

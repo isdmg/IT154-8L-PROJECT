@@ -85,6 +85,7 @@ public class MemStrategyVAR extends MemStrategyAdapterCONT {
         List<MemPartition> progsAllocated = new LinkedList<MemPartition>();
         List<MemPartition> holes = new LinkedList<MemPartition>();
         List<MemPartition> adjHoles = new LinkedList<MemPartition>();
+        List<MemPartition> partAdjHoles = new LinkedList<MemPartition>();
         Object[] memOrdered = memory.toArray();
         Arrays.sort(memOrdered);
         int i = 0;
@@ -105,7 +106,9 @@ public class MemStrategyVAR extends MemStrategyAdapterCONT {
             MemPartition currentHole = holes.get(j);
             MemPartition nextHole = holes.get(j+1);
             if ((currentHole.getStart() + currentHole.getSize()) == nextHole.getStart()) {
-                adjHoles.add(currentHole);
+                if (!adjHoles.contains(currentHole)) {
+                    adjHoles.add(currentHole);
+                }
                 adjHoles.add(nextHole);
             }
         }
@@ -123,21 +126,42 @@ public class MemStrategyVAR extends MemStrategyAdapterCONT {
             MemPartition firstHole = adjHoles.get(0);
             MemPartition lastHole = adjHoles.get(adjHoles.size() - 1);
 
-            System.out.println(firstHole.getStart());
-            System.out.println(lastHole.getStart());
-            System.out.println("==========>");
-            System.out.println(firstHole.getStart() + " " + (lastHole.getStart() + lastHole.getSize() - 1));
+            for(int z = 0; z < adjHoles.size() - 1; z++) {
+                boolean existNonContiguous = false;
+                MemPartition currentHole = adjHoles.get(z);
+                MemPartition nextHole = adjHoles.get(z + 1);
 
-            memory.removeAll(adjHoles);
-            int spaceDiff = (lastHole.getStart() + lastHole.getSize()) - firstHole.getStart();
+                if ((currentHole.getStart() + currentHole.getSize()) == nextHole.getStart()) {
+                    if (!partAdjHoles.contains(currentHole)) {
+                        partAdjHoles.add(currentHole);
+                    }
+                    partAdjHoles.add(nextHole);
+                } else {
+                    existNonContiguous = true;
+                }
 
-            MemPartition b = new MemPartition(firstHole.getStart(), spaceDiff);
-            System.out.println("Start" + b.getStart());
-            System.out.println("End:" + (b.getStart() + b.getSize() - 1));
-            memory.add(b);
-            MemoryManagement.coalesced = true;
-            MemoryManagement.jList.add(-20);
-            MemoryManagement.jIList.add(-20);
+                if (z == adjHoles.size() - 2 || existNonContiguous) {
+                    memory.removeAll(partAdjHoles);
+                    firstHole = partAdjHoles.get(0);
+                    lastHole = partAdjHoles.get(partAdjHoles.size() - 1);
+                    int spaceDiff = (lastHole.getStart() + lastHole.getSize()) - firstHole.getStart();
+
+                    System.out.println(firstHole.getStart());
+                    System.out.println(lastHole.getStart());
+                    System.out.println("==========>");
+                    System.out.println(firstHole.getStart() + " " + (lastHole.getStart() + lastHole.getSize() - 1));
+
+                    MemPartition b = new MemPartition(firstHole.getStart(), spaceDiff);
+                    System.out.println("Start" + b.getStart());
+                    System.out.println("End:" + (b.getStart() + b.getSize() - 1));
+                    memory.add(b);
+                    MemoryManagement.coalesced = true;
+                    MemoryManagement.jList.add(-20);
+                    MemoryManagement.jIList.add(-20);
+                    partAdjHoles.clear();
+                    break;
+                }
+            }
         }
     }
 
