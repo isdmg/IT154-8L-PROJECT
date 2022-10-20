@@ -943,7 +943,7 @@ public class ContextMemory {
             System.out.println("============TIME:" + time);
             if (processQueue.isEmpty()) return true;
         } else {
-            if (time % coalesceInterval == 0 && time != 0) {
+            if ((time % coalesceInterval == 0) && time != 0) {
                 coalesce();
             }
 

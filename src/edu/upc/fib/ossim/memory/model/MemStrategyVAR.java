@@ -41,6 +41,28 @@ public class MemStrategyVAR extends MemStrategyAdapterCONT {
     public void validateMemory(List<MemPartition> memory, int memory_size) {
     }
 
+    // function to sort hashmap by values
+    private static HashMap<Integer, Integer> sortByValue(HashMap<Integer, Integer> hm) {
+        // Create a list from elements of HashMap
+        List<Map.Entry<Integer, Integer>> list =
+                new LinkedList<Map.Entry<Integer, Integer>>(hm.entrySet());
+
+        // Sort the list
+        Collections.sort(list, new Comparator<Map.Entry<Integer, Integer>>() {
+            public int compare(Map.Entry<Integer, Integer> o1,
+                               Map.Entry<Integer, Integer> o2) {
+                return (o2.getValue()).compareTo(o1.getValue());
+            }
+        });
+
+        // put data from sorted list to hashmap
+        HashMap<Integer, Integer> temp = new LinkedHashMap<Integer, Integer>();
+        for (Map.Entry<Integer, Integer> aa : list) {
+            temp.put(aa.getKey(), aa.getValue());
+        }
+        return temp;
+    }
+
     /**
      * Compacts and merge free memory partitions
      *
@@ -52,7 +74,6 @@ public class MemStrategyVAR extends MemStrategyAdapterCONT {
             MemoryManagement.compactionDone = false;
             List<MemPartition> progsAllocated = new LinkedList<MemPartition>();
             HashMap<Integer, Integer> progSize = new HashMap<>();
-            LinkedList<Integer> progsIndexSorted = new LinkedList<>();
             List<MemPartition> progsAllocatedSorted = new LinkedList<MemPartition>();
             Object[] memOrdered = memory.toArray();
             Arrays.sort(memOrdered);
@@ -76,20 +97,25 @@ public class MemStrategyVAR extends MemStrategyAdapterCONT {
             Collections.sort(size);
             Collections.reverse(size);
 
-            for (int x = 0; x < size.size(); x++) {
-                for (int z = 1; z <= progSize.size(); z++) {
-                    if (progSize.get(z) == size.get(x)) {
-                        progsIndexSorted.add(z);
-                        break;
-                    }
-                }
-            }
+            progSize = sortByValue(progSize);
 
-            for (int z = 0; z < progsIndexSorted.size(); z++) {
+//            for (int x = 0; x < size.size(); x++) {
+//                for (int z = 1; z <= progSize.size(); z++) {
+//                    if (progSize.get(z) == size.get(x)) {
+//                        int progS = progSize.get(z);
+//                        progsIndexSorted.add(z);
+//                        break;
+//                    }
+//                }
+//            }
+
+            ArrayList<Integer> progSizeSorted = new ArrayList<>(progSize.keySet());
+
+            for (int z = 0; z < progSizeSorted.size(); z++) {
                 if (z == 0) {
                     progsAllocatedSorted.add(progsAllocated.get(0));
                 }
-                progsAllocatedSorted.add(progsAllocated.get(progsIndexSorted.get(z)));
+                progsAllocatedSorted.add(progsAllocated.get(progSizeSorted.get(z)));
             }
 
             Iterator<MemPartition> it = progsAllocatedSorted.iterator();
@@ -142,7 +168,7 @@ public class MemStrategyVAR extends MemStrategyAdapterCONT {
         for (int j = 0; j <= holes.size() - 2; j++) {
             System.out.print(holes.get(j).getStart() + " " + (holes.get(j).getStart() + holes.get(j).getSize()) + "\n");
             MemPartition currentHole = holes.get(j);
-            MemPartition nextHole = holes.get(j+1);
+            MemPartition nextHole = holes.get(j + 1);
             if ((currentHole.getStart() + currentHole.getSize()) == nextHole.getStart()) {
                 if (!adjHoles.contains(currentHole)) {
                     adjHoles.add(currentHole);
@@ -164,7 +190,7 @@ public class MemStrategyVAR extends MemStrategyAdapterCONT {
             MemPartition firstHole = adjHoles.get(0);
             MemPartition lastHole = adjHoles.get(adjHoles.size() - 1);
 
-            for(int z = 0; z < adjHoles.size() - 1; z++) {
+            for (int z = 0; z < adjHoles.size() - 1; z++) {
                 boolean existNonContiguous = false;
                 MemPartition currentHole = adjHoles.get(z);
                 MemPartition nextHole = adjHoles.get(z + 1);
@@ -202,7 +228,6 @@ public class MemStrategyVAR extends MemStrategyAdapterCONT {
             }
         }
     }
-
 
 
     /**
