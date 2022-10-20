@@ -302,11 +302,9 @@ public abstract class MemStrategyAdapterCONT implements MemStrategy {
 
 		if (candidate != null) {
 			allocateCandidate(memory, candidate, allocate);
-			MemStrategyVAR.setTProcessAllocation(true);
+			MemStrategyVAR.setTProcessAllocation(false);
 		}
-		else {
-			throw new SoSimException("me_08");
-		}
+		else throw new SoSimException("me_08");
 	}
 
 	/**

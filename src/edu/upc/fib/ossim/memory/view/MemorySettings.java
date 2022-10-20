@@ -59,7 +59,7 @@ public class MemorySettings extends SettingsTemplate {
 		super(presenter, keyHelp);
 	}
 
-
+// TODO: Compaction popup might be here
 	/**
 	 * Adds components to panel, memory size combo, operating system size combo, algorithm selection button group, 
 	 * partitions creation button (Fixed-size), compaction button (Variable size and segmentation),

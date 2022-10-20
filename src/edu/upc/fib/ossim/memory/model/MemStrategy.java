@@ -181,6 +181,9 @@ public interface MemStrategy {
 	 * 
 	 * @throws SoSimException	process can not be allocated
 	 */
+
+	public void coalesce(List<MemPartition> memory, int memory_size);
+
 	public void allocateProcess(List<MemPartition> memory, List<ProcessMemUnit> swap, ProcessMemUnit allocate, int memory_size) throws SoSimException;
 
 	/**

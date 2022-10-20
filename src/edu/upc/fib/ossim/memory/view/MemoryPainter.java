@@ -21,9 +21,10 @@ import java.util.Vector;
  * @author Alex Macia
  */
 // TODO: Decide UNIT HEIGHT
+	// TODO: Remove left click
 public class MemoryPainter extends PainterTemplate {
 	private static final long serialVersionUID = 1L;
-	private static final int M_UNITHEIGTH = 5; // 18 is default
+	private static final int M_UNITHEIGTH = 3;
 	private static final int ADDR_WIDTH = 30;
 	private static final int BORDER = 20;
 	public static final Color FRAG_E = Color.pink;
