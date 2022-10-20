@@ -934,7 +934,8 @@ public class ContextMemory {
     // TODO: Add time parameters
     public boolean forwardTime(int time) throws SoSimException {
         int coalesceInterval = 1;
-        if (time == 0) {
+        int compactInterval = 20;
+        if (time == -1) {
             backup(); // backup to restore initial state
             algorithm.validateMemory(memory, memorySize);
             initProcessSize = getProcessCount();
@@ -942,20 +943,26 @@ public class ContextMemory {
             System.out.println("============TIME:" + time);
             if (processQueue.isEmpty()) return true;
         } else {
-            if (time % coalesceInterval == 0) {
+            if (time % coalesceInterval == 0 && time != 0) {
                 coalesce();
             }
 
             // Release terminated programs from memory
-            if (memory.size() > 0) {
+            if (memory.size() > 0 && !MemoryManagement.compacted) {
                 System.out.println("============TIME:" + time);
                 releasePrograms(memory);
             }
 
+            if ((time % compactInterval == 0 || MemoryManagement.compacted) && time != 0) {
+                compaction();
+            }
+
+
+
 
             // Allocate new programs into memory. Programs ordered by init time
 
-            if (processQueue.size() > 0) {
+            if (processQueue.size() > 0 && !MemoryManagement.compacted) {
                 if (!algorithm.getAlgorithmInfo().contains("Pagination")) {
                     algorithm.allocateProcess(memory, swap, processQueue.get(0), memorySize);
                     processQueue.remove(0);
@@ -996,7 +1003,7 @@ public class ContextMemory {
 
 
         if (!MemoryManagement.allocated) {
-            if (!MemoryManagement.coalesced) {
+            if (!MemoryManagement.coalesced && !MemoryManagement.compacted) {
                 int index = MemoryManagement.getInstance().getJobSubtract(updated);
                 if (index != -1) {
                     ProcessMemUnit j = updated.get(index);

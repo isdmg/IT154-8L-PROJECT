@@ -48,63 +48,72 @@ public class MemStrategyVAR extends MemStrategyAdapterCONT {
      * @param memory_size memory size
      */
     public void compaction(List<MemPartition> memory, int memory_size) {
-        List<MemPartition> progsAllocated = new LinkedList<MemPartition>();
-        HashMap<Integer, Integer> progSize = new HashMap<>();
-        LinkedList<Integer> progsIndexSorted = new LinkedList<>();
-        List<MemPartition> progsAllocatedSorted = new LinkedList<MemPartition>();
-        Object[] memOrdered = memory.toArray();
-        Arrays.sort(memOrdered);
-        int i = 0;
-        while (i < memOrdered.length) {
-            MemPartition partition = (MemPartition) memOrdered[i];
-            if (partition.getAllocated() != null) {
-                progsAllocated.add(partition);
+        if (!MemoryManagement.compacted) {
+            MemoryManagement.compactionDone = false;
+            List<MemPartition> progsAllocated = new LinkedList<MemPartition>();
+            HashMap<Integer, Integer> progSize = new HashMap<>();
+            LinkedList<Integer> progsIndexSorted = new LinkedList<>();
+            List<MemPartition> progsAllocatedSorted = new LinkedList<MemPartition>();
+            Object[] memOrdered = memory.toArray();
+            Arrays.sort(memOrdered);
+            int i = 0;
+            while (i < memOrdered.length) {
+                MemPartition partition = (MemPartition) memOrdered[i];
+                if (partition.getAllocated() != null) {
+                    progsAllocated.add(partition);
+                }
+                i++;
             }
-            i++;
-        }
 
-        int end = 0;
-        memory.clear(); // Empty memory
+            int end = 0;
+            memory.clear(); // Empty memory
 
-        for (int z = 1; z < progsAllocated.size(); z++) {
-            progSize.put(z, progsAllocated.get(z).getAllocated().getSize());
-        }
+            for (int z = 1; z < progsAllocated.size(); z++) {
+                progSize.put(z, progsAllocated.get(z).getAllocated().getSize());
+            }
 
-        ArrayList<Integer> size = new ArrayList<>(progSize.values());
-        Collections.sort(size);
-        Collections.reverse(size);
+            ArrayList<Integer> size = new ArrayList<>(progSize.values());
+            Collections.sort(size);
+            Collections.reverse(size);
 
-        for (int x = 0; x < size.size(); x++) {
-            for (int z = 1; z <= progSize.size(); z++) {
-                if (progSize.get(z) == size.get(x)) {
-                    progsIndexSorted.add(z);
-                    break;
+            for (int x = 0; x < size.size(); x++) {
+                for (int z = 1; z <= progSize.size(); z++) {
+                    if (progSize.get(z) == size.get(x)) {
+                        progsIndexSorted.add(z);
+                        break;
+                    }
                 }
             }
-        }
 
-        for (int z = 0; z < progsIndexSorted.size(); z++) {
-            if (z == 0) {
-                progsAllocatedSorted.add(progsAllocated.get(0));
+            for (int z = 0; z < progsIndexSorted.size(); z++) {
+                if (z == 0) {
+                    progsAllocatedSorted.add(progsAllocated.get(0));
+                }
+                progsAllocatedSorted.add(progsAllocated.get(progsIndexSorted.get(z)));
             }
-            progsAllocatedSorted.add(progsAllocated.get(progsIndexSorted.get(z)));
-        }
 
-
-        Iterator<MemPartition> it = progsAllocatedSorted.iterator();
-        while (it.hasNext()) {
+            Iterator<MemPartition> it = progsAllocatedSorted.iterator();
             MemPartition memProg = it.next();
             memProg.setStart(end);
             end += memProg.getSize();
             memory.add(memProg);
-        }
 
-        if (end < memory_size) {
-            // Create partition with all available memory
-            MemPartition b = new MemPartition(end, memory_size - end);
-            System.out.println("Start" + b.getStart());
-            System.out.println("End:" + (b.getStart() + b.getSize() - 1));
-            memory.add(b);
+            MemoryManagement.coalesce_it = it;
+            MemoryManagement.coalesce_memory = memory;
+            MemoryManagement.coalesce_end = end;
+            MemoryManagement.memory_size = memory_size;
+            MemoryManagement.getInstance().compact();
+            MemoryManagement.compacted = true;
+
+//            while (it.hasNext()) {
+//                MemPartition memProg = it.next();
+//                memProg.setStart(end);
+//                end += memProg.getSize();
+//                memory.add(memProg);
+//            }
+//
+        } else {
+            MemoryManagement.getInstance().compact();
         }
     }
 
