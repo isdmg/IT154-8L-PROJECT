@@ -49,6 +49,9 @@ public class MemStrategyVAR extends MemStrategyAdapterCONT {
      */
     public void compaction(List<MemPartition> memory, int memory_size) {
         List<MemPartition> progsAllocated = new LinkedList<MemPartition>();
+        HashMap<Integer, Integer> progSize = new HashMap<>();
+        LinkedList<Integer> progsIndexSorted = new LinkedList<>();
+        List<MemPartition> progsAllocatedSorted = new LinkedList<MemPartition>();
         Object[] memOrdered = memory.toArray();
         Arrays.sort(memOrdered);
         int i = 0;
@@ -62,7 +65,33 @@ public class MemStrategyVAR extends MemStrategyAdapterCONT {
 
         int end = 0;
         memory.clear(); // Empty memory
-        Iterator<MemPartition> it = progsAllocated.iterator();
+
+        for (int z = 1; z < progsAllocated.size(); z++) {
+            progSize.put(z, progsAllocated.get(z).getAllocated().getSize());
+        }
+
+        ArrayList<Integer> size = new ArrayList<>(progSize.values());
+        Collections.sort(size);
+        Collections.reverse(size);
+
+        for (int x = 0; x < size.size(); x++) {
+            for (int z = 1; z <= progSize.size(); z++) {
+                if (progSize.get(z) == size.get(x)) {
+                    progsIndexSorted.add(z);
+                    break;
+                }
+            }
+        }
+
+        for (int z = 0; z < progsIndexSorted.size(); z++) {
+            if (z == 0) {
+                progsAllocatedSorted.add(progsAllocated.get(0));
+            }
+            progsAllocatedSorted.add(progsAllocated.get(progsIndexSorted.get(z)));
+        }
+
+
+        Iterator<MemPartition> it = progsAllocatedSorted.iterator();
         while (it.hasNext()) {
             MemPartition memProg = it.next();
             memProg.setStart(end);

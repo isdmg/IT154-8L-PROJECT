@@ -868,8 +868,7 @@ public class ContextMemory {
      * @see MemStrategy#compaction(List, int)
      */
     public void compaction() {
-        //algorithm.compaction(memory, memorySize);
-        algorithm.coalesce(memory, memorySize);
+        algorithm.compaction(memory, memorySize);
     }
 
     public void coalesce() {
