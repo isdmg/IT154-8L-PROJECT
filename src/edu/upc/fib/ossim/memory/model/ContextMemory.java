@@ -941,7 +941,6 @@ public class ContextMemory {
             initProcessSize = getProcessCount();
             MemoryManagement.getInstance().initialize(initProcessSize);
             System.out.println("============TIME:" + time);
-            if (processQueue.isEmpty()) return true;
         } else {
             if ((time % coalesceInterval == 0) && time != 0) {
                 coalesce();
@@ -981,7 +980,7 @@ public class ContextMemory {
 
             }
         }
-        return false;
+        return memory.size() == 2 && processQueue.isEmpty();
     }
 
     private void releasePrograms(List<MemPartition> memory) {

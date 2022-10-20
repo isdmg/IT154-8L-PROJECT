@@ -99,16 +99,6 @@ public class MemStrategyVAR extends MemStrategyAdapterCONT {
 
             progSize = sortByValue(progSize);
 
-//            for (int x = 0; x < size.size(); x++) {
-//                for (int z = 1; z <= progSize.size(); z++) {
-//                    if (progSize.get(z) == size.get(x)) {
-//                        int progS = progSize.get(z);
-//                        progsIndexSorted.add(z);
-//                        break;
-//                    }
-//                }
-//            }
-
             ArrayList<Integer> progSizeSorted = new ArrayList<>(progSize.keySet());
 
             for (int z = 0; z < progSizeSorted.size(); z++) {
@@ -118,33 +108,42 @@ public class MemStrategyVAR extends MemStrategyAdapterCONT {
                 progsAllocatedSorted.add(progsAllocated.get(progSizeSorted.get(z)));
             }
 
-            Iterator<MemPartition> it = progsAllocatedSorted.iterator();
-            MemPartition memProg = it.next();
-            memProg.setStart(end);
-            end += memProg.getSize();
-            memory.add(memProg);
+            if (progsAllocatedSorted.size() != 0) {
+                Iterator<MemPartition> it = progsAllocatedSorted.iterator();
+                MemPartition memProg = it.next();
+                memProg.setStart(end);
+                end += memProg.getSize();
+                memory.add(memProg);
 
-            MemoryManagement.coalesce_it = it;
-            MemoryManagement.coalesce_memory = memory;
-            MemoryManagement.coalesce_end = end;
-            MemoryManagement.memory_size = memory_size;
-            MemoryManagement.getInstance().compact();
-            MemoryManagement.compacted = true;
+                MemoryManagement.coalesce_it = it;
+                MemoryManagement.coalesce_memory = memory;
+                MemoryManagement.coalesce_end = end;
+                MemoryManagement.memory_size = memory_size;
+                MemoryManagement.getInstance().compact();
+                MemoryManagement.compacted = true;
 
-//            while (it.hasNext()) {
-//                MemPartition memProg = it.next();
-//                memProg.setStart(end);
-//                end += memProg.getSize();
-//                memory.add(memProg);
-//            }
-//
+            } else {
+                Iterator<MemPartition> it = progsAllocated.iterator();
+                MemPartition memProg = it.next();
+                memProg.setStart(end);
+                end += memProg.getSize();
+                memory.add(memProg);
+                if (end < memory_size) {
+                    // Create partition with all available memory
+                    MemPartition b = new MemPartition(end, memory_size - end);
+                    System.out.println("Start" + b.getStart());
+                    System.out.println("End:" + (b.getStart() + b.getSize() - 1));
+                    memory.add(b);
+                    MemoryManagement.compactionDone = true;
+                    MemoryManagement.jList.add(-30);
+                    MemoryManagement.jIList.add(-30);
+                }
+            }
         } else {
             MemoryManagement.getInstance().compact();
         }
     }
 
-    // TODO: 18-10-22 Check if adjacent using end of hole + start of another hole
-    // TODO: Check MemPartition (if u can edit hole color (indicate size) + process as well
     public void coalesce(List<MemPartition> memory, int memory_size) {
         List<MemPartition> progsAllocated = new LinkedList<MemPartition>();
         List<MemPartition> holes = new LinkedList<MemPartition>();
