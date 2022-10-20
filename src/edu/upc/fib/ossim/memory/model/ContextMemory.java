@@ -201,8 +201,8 @@ public class ContextMemory {
      * @return partition exists and can be selected
      */
     public boolean setSelectedPartition(int start, boolean started) {
-        System.out.println("setSelectedPartition");
         selectedPartition = getByStart(start);
+        System.out.println(selectedPartition.getSize());
         if (selectedPartition == null) return false;
         if (selectedPartition.getAllocated() != null && selectedPartition.getAllocated().getParent().getPid() == 0)
             return false;
@@ -934,7 +934,7 @@ public class ContextMemory {
      */
     // TODO: Add time parameters
     public boolean forwardTime(int time) throws SoSimException {
-        int coalesceInterval = 10;
+        int coalesceInterval = 1;
         if (time == 0) {
             backup(); // backup to restore initial state
             algorithm.validateMemory(memory, memorySize);

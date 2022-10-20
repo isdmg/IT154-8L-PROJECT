@@ -1,5 +1,6 @@
 package edu.upc.fib.ossim.memory.model;
 
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -87,6 +88,43 @@ public class MemoryManagement {
             } else {
                 shiftJobIndex();
                 return i;
+            }
+        }
+
+        // last resort
+        LinkedList<Integer> sortedJs = new LinkedList<>();
+        int z = 0;
+        if (js.size() != 0) {
+            for(int i = 0; i < js.size(); i++) {
+                sortedJs.add(js.get(i).getPid());
+            }
+            Collections.sort(sortedJs);
+            if (!sortedJs.contains(jobIndex)) {
+//                for(int i = 0; i < js.size(); i++) {
+//                    for (int j = 0; j < jSize; j++) {
+//                        if (sortedJs.get(i) != jobIndex) {
+//                            shiftJobIndex();
+//                        } else {
+//                            return i;
+//                        }
+//                    }
+//                }
+
+                for(int i = 0; i < js.size(); i++) {
+                    shiftJobIndex();
+                    if (sortedJs.contains(jobIndex)) {
+                        int returnIndex = jobIndex;
+                        shiftJobIndex();
+                        return sortedJs.indexOf(returnIndex);
+                    }
+//                    for (int j = 0; j < jSize; j++) {
+//                        if (sortedJs.get(i) != jobIndex) {
+//                            shiftJobIndex();
+//                        } else {
+//                            return i;
+//                        }
+//                    }
+                }
             }
         }
         return -1;
