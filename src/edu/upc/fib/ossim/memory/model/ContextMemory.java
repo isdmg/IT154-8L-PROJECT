@@ -980,7 +980,7 @@ public class ContextMemory {
 
             }
         }
-        return memory.size() == 2 && processQueue.isEmpty();
+        return memory.size() == 2 && processQueue.isEmpty() && !MemoryManagement.compacted;
     }
 
     private void releasePrograms(List<MemPartition> memory) {
